@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- README: a **痛点 / pain point** section stating the problem this plugin answers —
+  a session filling up *before* compaction runs (the automatic check only happens at
+  step boundaries, so one heavy step can consume the headroom mid-step), which forces
+  a fresh session that lost all context and re-bills every repeated input and tool
+  call as uncached work.
 - README: how to install this plugin **for someone else** — repo URL via *Add plugin*
   vs. clone + local path, the caveat that the dialog's China mirror only switches the
   npm registry, and the version-compatibility self-check

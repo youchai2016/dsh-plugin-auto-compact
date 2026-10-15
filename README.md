@@ -9,6 +9,26 @@ DSH 内置的压缩引擎出厂阈值是 80%（`DEFAULT_THRESHOLD_RATIO = 0.8`�
 
 ---
 
+## 痛点：还没等到压缩，窗口就先满了
+
+这不是谁操作失误，而是长任务 Agent 的通病：
+
+> 我同时开着几个会话做不同的活。其中两个**在我还没来得及压缩**的时候就跑满了 —— 窗口继续不了，
+> 只能**再开一个新窗口**。可新窗口不知道旧窗口发生过什么：项目背景、已经试过的方案、刚跑通的命令、
+> 你上次纠正我的地方，全都没了。于是我只好**把同样的上下文再交代一遍**、命令再跑一遍。
+> 不仅累，而且**更烧钱** —— 这些重复的输入和重复的工具调用都要重新计费一遍。
+
+为什么会这样，四个叠加的原因：
+
+1. **默认阈值贴着天花板。** 出厂 `DEFAULT_THRESHOLD_RATIO = 0.8`，再叠加 headroom 折算后实际约在 **72%** 才动手（256K 窗口 ≈ 188k token）。
+2. **检查点只在"步骤边界"。** 自动压缩挂在 `agent/pre-step`，每个 AI 步骤**开始之前**量一次；一个步骤**内部**的暴涨它管不到。
+3. **一个重步骤就能吃光余量。** 批量读几个大文件、一条长命令的输出、一份测试日志、一个大 diff，单步涨几万 token 很常见 —— 正好落在"上次量完"和"这次量之前"之间。
+4. **代价完全不对等。** 提前压缩的代价是**一次总结调用**；撞满窗口的代价是**重开窗口 + 重新交代 + 重新读文件 + 重新跑命令**，而且按未命中缓存的输入重新计费。
+
+所以把阈值压到 **50%**：永远给"一个重步骤"留出整块余量。**早一点、便宜一点、无感一点地压缩，好过撞墙之后从头再来。**
+
+如果你也踩过这个坑，欢迎到 [Issues](https://github.com/youchai2016/dsh-plugin-auto-compact/issues) 说说你的场景。
+
 ## 为什么需要一个插件
 
 想改这个数值，你会依次撞到四件事：
@@ -175,6 +195,8 @@ MIT（见 [LICENSE](./LICENSE)）。
 ## English
 
 `dsh-plugin-auto-compact` turns DSH's built-in context compaction on at **50%** instead of the shipped 80% default.
+
+**The pain point (this is why the project exists).** DSH compacts at ~72–80% by default, and the automatic check only runs at *step boundaries* (`agent/pre-step` measures once before each step). One heavy step — bulk file reads, a long command output, a big diff — can eat the remaining headroom **mid-step**, so the window fills before compaction ever runs. You then have to open a fresh session that knows nothing about the old one: background, decisions, commands that finally worked, your corrections — all gone. So you re-explain everything and re-run everything, and every repeated input and tool call is billed again as uncached work. Nothing about that is a user mistake; it is the default being too close to the ceiling. Compacting at 50% always leaves a full heavy step of room: a little early, a lot cheaper.
 
 It ships as a real profile bundle plugin, because a plain patch line is not enough: `@deepseek-ai/dsh-web-app` disables the host-plane compaction engine and moves compaction behind per-session agent presets, each mounting its own isolated `compaction-basic` with no config (0.8). A DSH patch replaces targeted rows wholesale, so changing one nested value inside a preset means restating the whole preset — which is exactly what the generated `cordis.patch.yml` does for `standard`, `cordis`, and `ptc`.
 
