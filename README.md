@@ -79,6 +79,41 @@ DSH 内置的压缩引擎出厂阈值是 80%（`DEFAULT_THRESHOLD_RATIO = 0.8`�
 
 > ⚠️ `bundles` 的顺序就是层序。本插件必须排在 `@deepseek-ai/dsh-web-app` **之后**，否则它覆盖 `compaction-basic` 的那一行会被 web-app 的 `disabled: true` 盖掉。
 
+## 把插件分享给别人
+
+这个包没有构建步骤（`lib/`、`locale/`、`cordis.patch.yml` 都已提交，`npm test` 零依赖），所以别人拿到仓库后有两条路：
+
+### 1. 直接用仓库地址（网络能访问 GitHub 时最省事）
+
+「插件 → **+ 添加插件**」→ 填 `github:youchai2016/dsh-plugin-auto-compact`（或 `https://github.com/youchai2016/dsh-plugin-auto-compact`）→ 安装 → **重启 DSH**。
+
+安装器会先做一次 GitHub 连通性检查（默认 5 秒超时），失败会提示"无法访问 GitHub"。注意：对话框里的"改用国内镜像"只切换 **npm 安装源**（`registry.npmmirror.com`），对 git 地址无效——那种情况下走第 2 条。
+
+### 2. 先克隆、再填本地目录（任何网络都能用）
+
+```bash
+git clone https://github.com/youchai2016/dsh-plugin-auto-compact.git
+# 若 https 被重置（部分国内网络会），改用 SSH：
+git clone git@github.com:youchai2016/dsh-plugin-auto-compact.git
+```
+
+然后在「+ 添加插件」里填**克隆下来的绝对路径** → 安装 → 重启；也可以按上面「方式 B」手动登记到 profile。
+
+> 发布到 npm 之后，最简形态是直接填包名 `dsh-plugin-auto-compact`，并把安装源切到中国大陆镜像。
+
+### 3. ⚠️ 装之前先做一次兼容性自检
+
+`cordis.patch.yml` 里 standard / cordis / ptc 三段是**整份拷贝**自 DSH 的预设声明，因此和 DSH 版本强耦合。别人的 DSH 版本与作者不同时，先跑：
+
+```bash
+npm test          # 零依赖结构自检（8 项）
+npm run regen     # 从"对方本机"的 DSH 重新生成预设覆盖（自动定位 presets）
+npm run preflight # 用"对方本机"的 loader 组合 profile，确认插件的层赢了
+# 三段都通过后再重启 DSH
+```
+
+`regen` 找不到对应的预设行时会直接报错并指出文件名，不会静默写出错配置；若上游预设已改名，同步 `tools/regen-preset-overrides.mjs` 顶部的 `PRESETS` 列表即可。
+
 ## 开关语义
 
 | 操作 | 结果 |
@@ -144,6 +179,8 @@ MIT（见 [LICENSE](./LICENSE)）。
 It ships as a real profile bundle plugin, because a plain patch line is not enough: `@deepseek-ai/dsh-web-app` disables the host-plane compaction engine and moves compaction behind per-session agent presets, each mounting its own isolated `compaction-basic` with no config (0.8). A DSH patch replaces targeted rows wholesale, so changing one nested value inside a preset means restating the whole preset — which is exactly what the generated `cordis.patch.yml` does for `standard`, `cordis`, and `ptc`.
 
 - **Install**: DSH → Plugins → *Add plugin* → point at this directory → restart DSH. Or register it manually in `<DSH_HOME>/profiles/<profile>/package.json` (`link:` dependency + last entry in `dsh.profile.bundles`).
+- **Install for someone else**: paste `github:youchai2016/dsh-plugin-auto-compact` into *Add plugin* (needs GitHub reachable), or `git clone` the repo and paste the local absolute path — then restart. The dialog's "China mirror" option only switches the **npm registry**, not git URLs.
+- **Before installing on a different DSH version**: `npm test && npm run regen && npm run preflight` (the preset declarations are copied per version), then restart.
 - **Switch**: the card's toggle adds/removes this bundle layer; off returns to stock behaviour.
 - **Threshold math**: `min(contextWindow × 0.5, contextWindow − reserved output − headroom)` — about 131k tokens on a 262k window.
 - **Verify**: `npm test` (dependency-free), `npm run preflight` (composes the profile with DSH's own loader), `npm run regen -- --check` (are the copied preset declarations stale?).

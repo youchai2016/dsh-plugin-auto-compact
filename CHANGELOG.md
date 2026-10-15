@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- README: how to install this plugin **for someone else** — repo URL via *Add plugin*
+  vs. clone + local path, the caveat that the dialog's China mirror only switches the
+  npm registry, and the version-compatibility self-check
+  (`npm test` → `npm run regen` → `npm run preflight`) before restarting.
+
 ## 1.0.0
 
 - First release. Contributes five rows to a DSH profile: the plugin's own host
