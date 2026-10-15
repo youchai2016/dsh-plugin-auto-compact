@@ -1,0 +1,4 @@
+# Keep every text file LF in the repository and on checkout: the generated
+# patch file is compared byte-for-byte by `npm run regen -- --check`, and CI
+# runs on Linux.
+* text=auto eol=lf

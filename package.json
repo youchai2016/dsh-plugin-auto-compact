@@ -1,0 +1,57 @@
+{
+  "name": "dsh-plugin-auto-compact",
+  "version": "1.0.0",
+  "description": "上下文占用达到 50% 时自动压缩：启用 DeepSeek Harness 内置的压缩引擎，并把宿主平面与会话预设的阈值统一调到 0.5。Auto-compact a DSH session once its context reaches 50%.",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "compaction",
+    "context",
+    "auto-compact"
+  ],
+  "license": "MIT",
+  "author": "youchai2016",
+  "type": "module",
+  "main": "lib/index.js",
+  "icon": "./assets/icon.svg",
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/en.json": "./locale/en.json",
+    "./locale/zh.json": "./locale/zh.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "locale",
+    "assets",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "regen": "node tools/regen-preset-overrides.mjs",
+    "preflight": "node tools/preflight.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/youchai2016/dsh-plugin-auto-compact.git"
+  },
+  "homepage": "https://github.com/youchai2016/dsh-plugin-auto-compact#readme",
+  "bugs": {
+    "url": "https://github.com/youchai2016/dsh-plugin-auto-compact/issues"
+  },
+  "devDependencies": {
+    "yaml": "^2.8.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

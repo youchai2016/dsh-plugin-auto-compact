@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Auto Context Compaction",
+    "description": "Automatically compacts the context once it reaches 50% usage (built-in compaction engine, threshold 0.5)."
+  }
+}
