@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- README rewritten to stay **concise**: it now answers exactly three questions — what the
+  plugin does, why it exists (the pain point), and how to use it. The deeper notes
+  (why a plugin is required, the five contributed rows, source-level compaction details,
+  manual profile registration, sharing/installing for others, post-upgrade flow,
+  compatibility, tooling) moved to [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
+  A test keeps the README under 120 lines and keeps the three headings present.
 - README: a **痛点 / pain point** section stating the problem this plugin answers —
   a session filling up *before* compaction runs (the automatic check only happens at
   step boundaries, so one heavy step can consume the headroom mid-step), which forces

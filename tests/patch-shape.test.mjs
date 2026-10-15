@@ -93,3 +93,15 @@ test('the host half is a loadable cordis plugin', async () => {
   assert.equal(typeof module.name, 'string');
   assert.ok(Array.isArray(module.inject));
 });
+
+test('the README stays concise and keeps answering the three questions', () => {
+  const readme = read('README.md');
+  const lines = readme.split('\n').length;
+  // Detail belongs in docs/HOW-IT-WORKS.md; the README is the three-answer summary.
+  assert.ok(lines <= 120, `README grew to ${lines} lines — move detail into docs/HOW-IT-WORKS.md`);
+  for (const heading of ['## 1. 这个插件干什么', '## 2. 为什么需要它（痛点）', '## 3. 怎么用']) {
+    assert.ok(readme.includes(heading), `README must keep the heading: ${heading}`);
+  }
+  assert.ok(readme.includes('docs/HOW-IT-WORKS.md'), 'README must link the detail doc');
+  assert.ok(statSync(join(ROOT, 'docs', 'HOW-IT-WORKS.md')).isFile());
+});
